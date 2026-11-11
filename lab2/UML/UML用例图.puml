@@ -1,98 +1,71 @@
 @startuml UML用例图
-
 title Campus Second-Hand Trading System - Use Case Diagram
-
 left to right direction
+
+skinparam backgroundColor #FFFFFF
 skinparam shadowing false
-skinparam packageStyle rectangle
-skinparam linetype polyline
-skinparam nodesep 38
-skinparam ranksep 60
-skinparam defaultFontName Arial
-skinparam ArrowColor #718096
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 13
+skinparam dpi 160
+skinparam linetype ortho
+skinparam nodesep 28
+skinparam ranksep 48
+skinparam roundcorner 10
+skinparam ArrowColor #94A3B8
+
+skinparam actor {
+    BorderColor #475569
+    FontColor #334155
+}
 
 skinparam usecase {
-  BackgroundColor #F8FAFC
-  BorderColor #64748B
-  FontColor #172033
+    BackgroundColor #F8FAFC
+    BorderColor #64748B
+    FontColor #1E293B
 }
 
-actor "Campus User\n(Buyer & Seller)" as User
+skinparam rectangle {
+    BackgroundColor #FFFFFF
+    BorderColor #B8C6D6
+    FontColor #334155
+}
+
+actor "Campus User\n(Buyer & Seller)" as CampusUser
 actor "Administrator" as Admin
 
-rectangle "Campus Second-Hand Trading System" {
-
-  package "Campus User Functions" {
-
-    package "Account Access" {
-      usecase "Register and\nVerify Email" as U1
-      usecase "Log In" as U2
+rectangle "Campus Second-Hand Trading System" as System {
+    rectangle "USER SERVICES" as UserServices #F8FAFC {
+        usecase "Register / Sign In\n& Verify Campus Email" as U1
+        usecase "Browse & Search\nProducts" as U2
+        usecase "Publish / Manage\nListings & Appeals" as U3
+        usecase "Contact Seller\n(Text & Images)" as U4
+        usecase "Create & Manage\nReservations" as U5
+        usecase "Confirm Trade\nOutcome" as U6
+        usecase "View Personal\nRecords" as U7
     }
 
-    package "Products" {
-      usecase "Search and Browse\nProducts" as U3
-      usecase "View Product\nDetails" as U4
-      usecase "Create and Submit\nListings" as U5
-      usecase "Manage My\nListings" as U6
-      usecase "Submit Violation\nAppeal" as U7
+    rectangle "PLATFORM ADMINISTRATION" as Administration #F8FAFC {
+        usecase "Review Product\nSubmissions" as A1
+        usecase "Handle Violations\n& Appeals" as A2
+        usecase "Manage User\nAccounts & Roles" as A3
+        usecase "Resolve Disputed\nReservations" as A4
+        usecase "View Logs\n& Statistics" as A5
     }
-
-    package "Trading and Communication" {
-      usecase "Contact Seller\n(Text / Images)" as U8
-      usecase "Create\nReservation" as U9
-      usecase "Manage\nReservations" as U10
-      usecase "Confirm Trade\nCompletion" as U11
-      usecase "View Personal\nRecords" as U12
-    }
-  }
-
-  package "Administrator Functions" {
-    usecase "Review Product\nSubmissions" as A1
-    usecase "Handle Violations\nand Appeals" as A2
-    usecase "Manage User\nAccounts" as A3
-    usecase "Resolve Disputed\nReservations" as A4
-    usecase "View Logs and\nStatistics" as A5
-  }
 }
 
-' Layout control
-U1 -[hidden]down-> U2
-U3 -[hidden]down-> U4
-U4 -[hidden]down-> U5
-U5 -[hidden]down-> U6
-U6 -[hidden]down-> U7
-U8 -[hidden]down-> U9
-U9 -[hidden]down-> U10
-U10 -[hidden]down-> U11
-U11 -[hidden]down-> U12
+' 关联：左下用户连左边用户用例，右下管理员连右边管理用例
+CampusUser -- U1
+CampusUser -- U2
+CampusUser -- U3
+CampusUser -- U4
+CampusUser -- U5
+CampusUser -- U6
+CampusUser -- U7
 
-A1 -[hidden]down-> A2
-A2 -[hidden]down-> A3
-A3 -[hidden]down-> A4
-A4 -[hidden]down-> A5
-
-U3 -[hidden]right-> A1
-
-' User associations
-User -right- U1
-User -right- U2
-User -right- U3
-User -right- U4
-User -right- U5
-User -right- U6
-User -right- U7
-User -right- U8
-User -right- U9
-User -right- U10
-User -right- U11
-User -right- U12
-
-' Administrator associations
-A1 -right- Admin
-A2 -right- Admin
-A3 -right- Admin
-A4 -right- Admin
-A5 -right- Admin
-U2 -right- Admin : logs in
+Admin -- A1
+Admin -- A2
+Admin -- A3
+Admin -- A4
+Admin -- A5
 
 @enduml

@@ -2,65 +2,67 @@
 @startuml UML时序图
 
 title Campus Second-Hand Trading System - Reservation Sequence
-skinparam sequence {
-  Actor {
-    BackgroundColor #F8FAFC
-  }
-  Participant {
-    BackgroundColor #F8FAFC
-  }
-  Message {
-    FontSize 11
-  }
-  ArrowColor #64748B
-}
-skinparam defaultFontName "DejaVu Sans"
+
+hide footbox
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
 skinparam defaultFontSize 12
-skinparam dpi 160
+skinparam ParticipantPadding 12
+skinparam BoxPadding 8
+skinparam responseMessageBelowArrow false
+skinparam sequenceMessageAlign center
+
+skinparam sequence {
+    ArrowColor #64748B
+    LifeLineBorderColor #94A3B8
+    LifeLineBackgroundColor #F8FAFC
+    ParticipantBorderColor #64748B
+    ParticipantBackgroundColor #EFF4F9
+    ParticipantFontColor #1E293B
+    GroupBorderColor #94A3B8
+    GroupBackgroundColor #F8FAFC
+    GroupHeaderFontColor #334155
+}
 
 actor Buyer
-participant "Web UI" as UI
-participant "Reservation Service" as RS
-participant "Product Service" as PS
-database Database
+boundary "Web UI" as UI
+control "Reservation Service" as RS
+control "Product Service" as PS
+database "Database" as DB
 
 Buyer -> UI : Click Reserve
 UI -> RS : reserve(productId, requestKey)
 activate RS
 
-RS -> PS : Check buyer / seller accounts
-PS --> Database : Query account status
-Database --> PS : Eligibility result
-PS --> RS : Eligibility result
+RS -> DB : Check buyer / seller accounts
+DB --> RS : Eligibility result
 
-alt [Account blocked]
+alt Account blocked
     RS --> UI : Reject request
-else [Accounts eligible]
+else Accounts eligible
     RS -> PS : Check product availability
-    PS --> Database : Read product state
-    Database --> PS : Product state
+    PS -> DB : Read product state
+    DB --> PS : Product state
     PS --> RS : Availability result
 
-    alt [Product unavailable]
+    alt Product unavailable
         RS --> UI : Reject request
-    else [Product appears available]
-        opt Atomic reservation transaction
-            RS -> PS : Lock product; recheck state, accounts and requestKey
-            PS --> Database : Fetch current data
-            Database --> PS : Current data
-            PS --> RS : Current data
+    else Product appears available
+        group Atomic reservation transaction
+            RS -> DB : Lock product; recheck state,\naccounts and requestKey
+            DB --> RS : Current data
 
-            alt [Duplicate request]
-                PS --> Database : Rollback
+            alt Duplicate request
+                RS -> DB : Rollback
                 RS --> UI : Return existing status
-            else [Conflict or unavailable]
-                PS --> Database : Rollback
+            else Conflict or unavailable
+                RS -> DB : Rollback
                 RS --> UI : Reject (already reserved)
-            else [Available]
-                PS --> Database : Create reservation (WAITING_SELLER)\nand set product RESERVED
-                PS --> Database : Commit
-                Database --> PS : reservationId
-                PS --> RS : reservationId
+            else Available
+                RS -> DB : Create reservation (WAITING_SELLER)\nand set product RESERVED
+                RS -> DB : Commit
+                DB --> RS : reservationId
                 RS --> UI : Reservation successful
             end
         end
@@ -69,4 +71,5 @@ end
 
 deactivate RS
 UI --> Buyer : Display result
+
 @enduml
