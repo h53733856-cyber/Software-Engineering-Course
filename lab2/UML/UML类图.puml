@@ -1,0 +1,224 @@
+
+@startuml UML类图
+
+title Campus Second-Hand Trading System - Class Diagram
+
+left to right direction
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam linetype polyline
+skinparam nodesep 35
+skinparam ranksep 55
+hide circle
+
+package "Account" {
+    class User {
+        - userId: String
+        - studentId: String
+        - name: String
+        - email: String
+        - passwordHash: String
+        - role: String
+        - accountStatus: String
+        + login(): Boolean
+        + isActive(): Boolean
+    }
+
+    class EmailVerification {
+        - verificationId: String
+        - targetEmail: String
+        - codeHash: String
+        - expiresAt: DateTime
+        - verifiedAt: DateTime
+        - status: String
+        + verify(code: String): Boolean
+    }
+}
+
+package "Product and Review" {
+    enum ProductStatus {
+        DRAFT
+        PENDING_REVIEW
+        ON_SHELF
+        RESERVED
+        SOLD
+        OFF_SHELF
+        VIOLATION_REMOVED
+    }
+
+    class Product {
+        - productId: String
+        - title: String
+        - description: String
+        - category: String
+        - price: Decimal
+        - status: ProductStatus
+        - createdAt: DateTime
+        + saveDraft(): void
+        + submitForReview(): void
+        + withdrawReview(): void
+        + takeDown(): void
+    }
+
+    class ProductRevision {
+        - revisionId: String
+        - previousContent: String
+        - proposedContent: String
+        - status: String
+        - submittedAt: DateTime
+        + submitForReview(): void
+        + invalidate(): void
+    }
+
+    class ProductReview {
+        - reviewId: String
+        - reviewType: String
+        - revisionId: String
+        - reviewerId: String
+        - result: String
+        - rejectionReason: String
+        - reviewedAt: DateTime
+        + approve(): void
+        + reject(reason: String): void
+    }
+
+    class Appeal {
+        - appealId: String
+        - applicantId: String
+        - reviewerId: String
+        - reason: String
+        - status: String
+        - decisionReason: String
+        - handledAt: DateTime
+        + submit(): void
+        + resolve(): void
+    }
+}
+
+package "Reservation and Transaction" {
+    enum ReservationStatus {
+        WAITING_SELLER
+        CONFIRMED
+        CANCELLED
+        PENDING_ADMIN
+        COMPLETED
+    }
+
+    class Reservation {
+        - reservationId: String
+        - status: ReservationStatus
+        - createdAt: DateTime
+        - sellerConfirmedAt: DateTime
+        + create(): void
+        + confirmBySeller(): void
+        + rejectBySeller(): void
+        + cancelByBuyer(): void
+        + confirmTradeCompletedByBuyer(): void
+        + reportUnfinished(): void
+    }
+
+    class TransactionRecord {
+        - transactionId: String
+        - finalPrice: Decimal
+        - completedAt: DateTime
+    }
+
+    class DisputeResolution {
+        - resolutionId: String
+        - administratorId: String
+        - outcome: String
+        - reason: String
+        - resolvedAt: DateTime
+        + resolve(): void
+    }
+}
+
+package "Messaging" {
+    class ChatSession {
+        - sessionId: String
+        - buyerId: String
+        - sellerId: String
+        - createdAt: DateTime
+    }
+
+    class ChatMessage {
+        - messageId: String
+        - senderId: String
+        - messageType: String
+        - textContent: String
+        - imageUrl: String
+        - sentAt: DateTime
+        + send(): void
+        + retryImageUpload(): void
+    }
+}
+
+package "Audit Log" {
+    class OperationLog {
+        - logId: String
+        - actorId: String
+        - action: String
+        - targetType: String
+        - targetId: String
+        - result: String
+        - details: String
+        - occurredAt: DateTime
+        + record(): void
+    }
+}
+
+' Core entity associations and multiplicities
+User "1" -- "0..*" EmailVerification : verification attempts
+User "1" -- "0..*" Product : seller
+User "1" -- "0..*" Reservation : buyer
+User "0..1" -- "0..*" OperationLog : actor
+
+Product "1" -- "0..*" ProductRevision : revision history
+Product "1" -- "0..*" ProductReview : approval history
+Product "1" -- "0..*" Appeal : appeals
+Product "1" -- "0..*" Reservation : reservation history
+Product "1" -- "0..*" ChatSession : conversations
+
+Reservation "1" -- "0..1" TransactionRecord : completion record
+Reservation "1" -- "0..*" DisputeResolution : admin decisions
+
+User "1" -- "0..*" ChatSession : participates
+ChatSession "1" -- "0..*" ChatMessage : messages
+
+note right of User
+  NORMAL users may both buy and sell.
+  ADMIN accounts are assigned by maintainers.
+  Active student IDs and emails must be unique.
+end note
+
+note right of ProductRevision
+  Approved-product edits need a new review.
+  Up to 2 valid modification submissions per day.
+  Rejected submissions do not count.
+  Pending edits become invalid if reserved.
+end note
+
+note right of Reservation
+  At most one active reservation per product.
+  Reservation and product updates are atomic.
+  Buyers can cancel before seller confirmation.
+  Seller rejection retention is unresolved.
+end note
+
+note right of DisputeResolution
+  Outcomes: VOID / KEEP_ACTIVE / COMPLETE.
+  Dispute timeout is not yet finalized.
+end note
+
+note bottom of ProductStatus
+  Provisional state names;
+  complete transitions require confirmation.
+end note
+
+note bottom of ReservationStatus
+  Provisional state names;
+  seller-rejection status is unresolved.
+end note
+
+@enduml

@@ -1,0 +1,85 @@
+
+@startuml UML状态图
+
+title Campus Second-Hand Trading System - State Diagram
+
+left to right direction
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam linetype polyline
+skinparam nodesep 30
+skinparam ranksep 45
+skinparam ArrowColor #64748B
+
+skinparam state {
+    BackgroundColor #F8FAFC
+    BorderColor #64748B
+    FontColor #1E293B
+    StartColor #475569
+    EndColor #475569
+}
+
+state "Product Lifecycle" as Product {
+    state "Draft" as P_Draft
+    state "Pending Review" as P_Review
+    state "On Shelf" as P_Sale
+    state "Reserved" as P_Reserved
+    state "Sold" as P_Sold
+    state "Off Shelf" as P_Off
+    state "Violation Removed" as P_Removed
+
+    [*] --> P_Draft
+    P_Draft --> P_Review : Submit
+    P_Review --> P_Draft : Reject / Withdraw
+    P_Review --> P_Sale : Approve
+
+    P_Sale --> P_Reserved : Reservation created
+    P_Reserved --> P_Sale : Reservation ended [eligible]
+    P_Reserved --> P_Sold : Trade completed
+
+    P_Sale --> P_Off : Seller takes down
+    P_Off --> P_Sale : Relist [eligible]
+
+    P_Sale --> P_Removed : Admin removes
+    P_Removed --> P_Sale : Appeal approved [prior on shelf, eligible]
+}
+
+state "Reservation Lifecycle" as Reservation {
+    state "Waiting for Seller" as R_Waiting
+    state "Confirmed" as R_Confirmed
+    state "Cancelled" as R_Cancelled
+    state "Pending Admin" as R_Pending
+    state "Completed" as R_Completed
+
+    [*] --> R_Waiting : Reservation created
+    R_Waiting --> R_Confirmed : Seller confirms
+    R_Waiting --> R_Cancelled : Buyer cancels / seller account disabled
+    R_Waiting --> [*] : Seller rejects (record policy TBD)
+
+    R_Confirmed --> R_Completed : Buyer confirms trade
+    R_Confirmed --> R_Cancelled : Both confirm no trade
+    R_Confirmed --> R_Pending : Dispute [timeout met] / seller disabled
+
+    R_Pending --> R_Cancelled : Admin voids
+    R_Pending --> R_Confirmed : Admin keeps active
+    R_Pending --> R_Completed : Admin confirms trade
+}
+
+Product -[hidden]right-> Reservation
+
+note bottom of Product
+  Product becomes available again only when
+  review, account and other restrictions allow.
+  Approved edits use a separate review process.
+  Appeal recovery depends on the prior state.
+end note
+
+note bottom of Reservation
+  Only one active reservation per product.
+  Dispute timeout and seller-rejection
+  record handling are not yet confirmed.
+end note
+
+@enduml

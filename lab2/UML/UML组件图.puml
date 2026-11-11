@@ -1,0 +1,43 @@
+@startuml UML组件图
+title Campus Second‑Hand Trading System - Component Diagram
+top to bottom direction
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 60
+
+skinparam package {
+  margin 18
+}
+
+package "Campus Second‑Hand Trading System" as System {
+
+    package "User & Personal Service" as UserService {
+        [M1 User & Permission Manage] as M1
+        [M5 Personal Center] as M5
+    }
+
+    package "Product Service" as ProductService {
+        [M2 Product Publish & Manage] as M2
+        [M3 Product Review & Appeals] as M3
+        [M4 Product Browse & Query] as M4
+    }
+
+    package "Trade & Chat Service" as TradeService {
+        [M6 Reservation & Transaction Management] as M6
+        [M7 Product Chat] as M7
+    }
+
+    package "Platform Operation Service" as AdminService {
+        [M8 Log & Statistics] as M8
+    }
+}
+
+' 注意：商品服务依赖用户服务做权限校验，箭头修正方向（A-->B：A依赖B）
+ProductService --> UserService : identity & permission check
+TradeService --> ProductService : get product & available status
+AdminService --> TradeService : query trade statistics
+
+@enduml
+

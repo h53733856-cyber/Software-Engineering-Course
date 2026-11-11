@@ -1,0 +1,68 @@
+@startuml UML活动图
+
+title Campus Second-Hand Trading System - Product Review Activity Diagram
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam ArrowColor #64748B
+skinparam linetype ortho
+skinparam activity {
+    BackgroundColor #F8FAFC
+    BorderColor #64748B
+    FontColor #1E293B
+    DiamondBackgroundColor #EDF4FA
+    DiamondBorderColor #64748B
+    DiamondFontColor #1E293B
+    StartColor #475569
+    EndColor #475569
+}
+skinparam swimlane {
+    BorderColor #D6DFEA
+    TitleBackgroundColor #EAF0F7
+    TitleFontColor #334155
+}
+
+|Seller|
+start
+:Create a product draft;
+
+repeat
+    :Enter or revise product details;
+    :Submit for review;
+
+    |System|
+    if (Account active and\nrequired fields valid?) then (Yes)
+        :Set status to PENDING_REVIEW;
+        :Lock submitted content;
+
+        |Administrator|
+        :Review the submitted listing;
+
+        if (Review approved?) then (Yes)
+            |System|
+            :Set status to ON_SHELF;
+            :Make the listing searchable;
+            stop
+        else (No)
+            |System|
+            :Keep listing data and\nsave rejection reason;
+            :Set status to REJECTED;
+            :Unlock listing for revision;
+
+            |Seller|
+            :Read rejection feedback;
+        endif
+
+    else (No)
+        :Display submission error;
+
+        |Seller|
+        :Check and correct information;
+    endif
+
+repeat while (Resubmit listing?) is (Yes) not (No)
+
+stop
+@enduml

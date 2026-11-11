@@ -1,0 +1,98 @@
+@startuml UML用例图
+
+title Campus Second-Hand Trading System - Use Case Diagram
+
+left to right direction
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam linetype polyline
+skinparam nodesep 38
+skinparam ranksep 60
+skinparam defaultFontName Arial
+skinparam ArrowColor #718096
+
+skinparam usecase {
+  BackgroundColor #F8FAFC
+  BorderColor #64748B
+  FontColor #172033
+}
+
+actor "Campus User\n(Buyer & Seller)" as User
+actor "Administrator" as Admin
+
+rectangle "Campus Second-Hand Trading System" {
+
+  package "Campus User Functions" {
+
+    package "Account Access" {
+      usecase "Register and\nVerify Email" as U1
+      usecase "Log In" as U2
+    }
+
+    package "Products" {
+      usecase "Search and Browse\nProducts" as U3
+      usecase "View Product\nDetails" as U4
+      usecase "Create and Submit\nListings" as U5
+      usecase "Manage My\nListings" as U6
+      usecase "Submit Violation\nAppeal" as U7
+    }
+
+    package "Trading and Communication" {
+      usecase "Contact Seller\n(Text / Images)" as U8
+      usecase "Create\nReservation" as U9
+      usecase "Manage\nReservations" as U10
+      usecase "Confirm Trade\nCompletion" as U11
+      usecase "View Personal\nRecords" as U12
+    }
+  }
+
+  package "Administrator Functions" {
+    usecase "Review Product\nSubmissions" as A1
+    usecase "Handle Violations\nand Appeals" as A2
+    usecase "Manage User\nAccounts" as A3
+    usecase "Resolve Disputed\nReservations" as A4
+    usecase "View Logs and\nStatistics" as A5
+  }
+}
+
+' Layout control
+U1 -[hidden]down-> U2
+U3 -[hidden]down-> U4
+U4 -[hidden]down-> U5
+U5 -[hidden]down-> U6
+U6 -[hidden]down-> U7
+U8 -[hidden]down-> U9
+U9 -[hidden]down-> U10
+U10 -[hidden]down-> U11
+U11 -[hidden]down-> U12
+
+A1 -[hidden]down-> A2
+A2 -[hidden]down-> A3
+A3 -[hidden]down-> A4
+A4 -[hidden]down-> A5
+
+U3 -[hidden]right-> A1
+
+' User associations
+User -right- U1
+User -right- U2
+User -right- U3
+User -right- U4
+User -right- U5
+User -right- U6
+User -right- U7
+User -right- U8
+User -right- U9
+User -right- U10
+User -right- U11
+User -right- U12
+
+' Administrator associations
+A1 -right- Admin
+A2 -right- Admin
+A3 -right- Admin
+A4 -right- Admin
+A5 -right- Admin
+U2 -right- Admin : logs in
+
+@enduml

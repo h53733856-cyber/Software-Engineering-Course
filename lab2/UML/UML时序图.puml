@@ -1,0 +1,72 @@
+
+@startuml UML时序图
+
+title Campus Second-Hand Trading System - Reservation Sequence
+skinparam sequence {
+  Actor {
+    BackgroundColor #F8FAFC
+  }
+  Participant {
+    BackgroundColor #F8FAFC
+  }
+  Message {
+    FontSize 11
+  }
+  ArrowColor #64748B
+}
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 12
+skinparam dpi 160
+
+actor Buyer
+participant "Web UI" as UI
+participant "Reservation Service" as RS
+participant "Product Service" as PS
+database Database
+
+Buyer -> UI : Click Reserve
+UI -> RS : reserve(productId, requestKey)
+activate RS
+
+RS -> PS : Check buyer / seller accounts
+PS --> Database : Query account status
+Database --> PS : Eligibility result
+PS --> RS : Eligibility result
+
+alt [Account blocked]
+    RS --> UI : Reject request
+else [Accounts eligible]
+    RS -> PS : Check product availability
+    PS --> Database : Read product state
+    Database --> PS : Product state
+    PS --> RS : Availability result
+
+    alt [Product unavailable]
+        RS --> UI : Reject request
+    else [Product appears available]
+        opt Atomic reservation transaction
+            RS -> PS : Lock product; recheck state, accounts and requestKey
+            PS --> Database : Fetch current data
+            Database --> PS : Current data
+            PS --> RS : Current data
+
+            alt [Duplicate request]
+                PS --> Database : Rollback
+                RS --> UI : Return existing status
+            else [Conflict or unavailable]
+                PS --> Database : Rollback
+                RS --> UI : Reject (already reserved)
+            else [Available]
+                PS --> Database : Create reservation (WAITING_SELLER)\nand set product RESERVED
+                PS --> Database : Commit
+                Database --> PS : reservationId
+                PS --> RS : reservationId
+                RS --> UI : Reservation successful
+            end
+        end
+    end
+end
+
+deactivate RS
+UI --> Buyer : Display result
+@enduml
